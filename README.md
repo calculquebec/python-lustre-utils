@@ -9,7 +9,7 @@ those devices.
 
 ##Example usages
 
-### MDS
+### MDS/MDT
 
 On a MDS, initialize a lustre_mds object and use it to get a
 lustre_mds_stats object at regular interval.  Compare 2 lustre_mds_stats
@@ -68,3 +68,62 @@ nb_setattr=37349033
 nb_link=358
 nb_statfs=875795
 ```
+
+### OSS/OST
+On an OSSS, initialize a lustre_oss object and use it to get a
+lustre_oss_stats object at regular interval.  Compare 2 lustre_oss_stats
+to calculate the activity between the 2 timestamps.
+
+Average request waittime would be:
+(oss_stats2.req_waittime - oss_stats1.req_waittime) / (oss_stats2.req - oss_stats1.req)
+
+```
+>>> from lustre_util import *
+>>> oss_stats = lustre_oss.get_OSS_stats()
+>>> print "OSS nb threads={0}".format(oss_stats.nb_threads)
+OSS nb threads=192
+>>> print "OSS nb requests={0}".format(oss_stats.req)
+OSS nb requests=86688783
+>>> print "OSS request wait time={0}".format(oss_stats.req_waittime)
+OSS request wait time=148960010965
+>>> print oss_stats.timestamp
+1429026158.35
+>>>
+```
+Iterate over OSTs (lustre_ost) on that oss to get their state and IO 
+counters through lustre_ost_stats. Compare 2 lustre_ost_stats object 
+to calculate average IOPS over the delta of their respective timestamp.
+
+With little changes, this could also be run on the MDS to have an easier 
+aggregate of disk usage. For now, disk usage for the FS is the sum of 
+KB_total on all OSTs.
+
+```
+>>> for ost in lustre_ost.get_OSTs():
+...     print "OST={0}".format(ost.name)
+...     (total, count) = ost.get_disk_usage()
+...     print "KB_total={0}".format(total)
+...     print "KB_used={0}".format(count)
+...     (total, count) = ost.get_inode_usage()
+...     print "inodes_total={0}".format(total)
+...     print "inodes_used={0}".format(count)
+...     stats = ost.get_stats()
+...     print "read_bytes={0}".format(stats.read_bytes)
+...     print "write_bytes={0}".format(stats.write_bytes)
+...     print "read_count={0}".format(stats.read_count)
+...     print "write_count={0}".format(stats.write_count)
+...
+OST=lustre1-OST0002
+KB_total=30476265216
+KB_used=24698989696
+inodes_total=54089535
+inodes_used=8954570
+read_bytes=24153136496640
+write_bytes=20812013882221
+read_count=60069567
+write_count=25409128
+```
+Additionnally, if running on ldiskfs, some brw_stats are available from
+lustre_ost_stats.IO_size_KB
+
+
