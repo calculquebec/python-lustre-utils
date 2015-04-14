@@ -1,3 +1,8 @@
+# Copyright (c) 2014 . All rights reserved.
+# Use of this source code is governed by the APACHE 2.0 license that can be
+# found in the LICENSE file.
+# Author: Frederick Lefebre <frederick.lefebvre@calculquebec.ca>
+
 import copy
 
 class lustre_client_stats :
